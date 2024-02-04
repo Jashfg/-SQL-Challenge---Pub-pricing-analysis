@@ -1,0 +1,85 @@
+#1. How many pubs are located in each country??
+select    country , count(pub_id) from pubs
+group by country;
+
+#2. What is the total sales amount for each pub, including the beverage price and quantity sold?
+select pub_name , sum(price_per_unit*quantity) as total_sales  , price_per_unit , quantity from beverages
+inner join sales
+on
+sales.beverage_id=beverages.beverage_id
+inner join pubs
+on
+sales.pub_id=pubs.pub_id
+group by pub_name , price_per_unit , quantity
+order by total_sales desc;
+
+#3. Which pub has the highest average rating?
+select pub_name , avg(rating) as average_rating from pubs
+inner join ratings
+on
+pubs.pub_id=ratings.pub_id
+group by pub_name 
+order by average_rating desc
+limit 1;
+
+#4. What are the top 5 beverages by sales quantity across all pubs?
+select beverage_name ,  sum(quantity) as total_sales_quantity from sales 
+inner join beverages
+on
+sales.beverage_id=beverages.beverage_id
+group by  beverage_name   
+order by total_sales_quantity desc
+limit 5;
+
+
+#5. How many sales transactions occurred on each date?
+select transaction_date , count(sale_id) from sales
+group by transaction_date
+order by count(sale_id) desc;
+
+
+#6. Find the name of someone that had cocktails and which pub they had it in.
+select category , pub_name from sales 
+inner join beverages
+on
+sales.beverage_id=beverages.beverage_id
+inner join pubs
+on
+pubs.pub_id=sales.pub_id
+where category="cocktail"
+group by pub_name , category ;
+
+
+#7. What is the average price per unit for each category of beverages, excluding the category 'Spirit'?
+select category ,  avg(price_per_unit) as avgerage_price_each_category from beverages
+where category="spirit"
+group by category;
+ 
+ 
+#8. Which pubs have a rating higher than the average rating of all pubs?
+select pub_name ,  avg(rating) as average_rating from pubs
+inner join ratings
+on
+pubs.pub_id=ratings.pub_id
+group by pub_name
+having avg(rating)>(select avg(rating) from ratings);
+
+
+#9. What is the running total of sales amount for each pub, ordered by the transaction date?
+
+
+#10. For each country, what is the average price per unit of beverages in each category, and what is the overall
+#average price per unit of beverages across all categories?
+
+with average as (select avg(price_per_unit) as avg_price , category , country
+from beverages
+inner join sales 
+on
+beverages. beverage_id=sales.beverage_id
+inner join pubs
+on
+pubs.pub_id=sales.pub_id
+group by category , country)
+select avg_price , category , country ,avg(avg_price)  over (partition by country )  as overall_average_price_per_unit
+from average
+order by overall_average_price_per_unit;
